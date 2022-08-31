@@ -15,8 +15,9 @@ import logging
 from logging import Formatter, FileHandler
 from datetime import datetime
 from flask_migrate import Migrate
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from forms import *
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -25,12 +26,13 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
-#migrate = Migrate(app, db)
+migrate = Migrate(app, db)
 
-
-# TODO: connect to a local postgresql database
+# Models
 from models import *
-db.create_all()
+# TODO: connect to a local postgresql database
+
+#db.create_all()
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -153,7 +155,7 @@ def create_venue_submission():
   # TODO: modify data to be the data object returned from db insertion
    
   form = VenueForm()
-  if 1==1:
+  if form.validate():
         try:
           venue_new = Venue(name=form.name.data,
                             city=form.city.data,
@@ -275,9 +277,9 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
   # TODO: take values from the form submitted, and update existing
   # artist record with ID <artist_id> using the new attributes
-  artist = Artist.query.get(artist_id)
+  artist = Artist.query.filter_by(id = artist_id).first()
   form = ArtistForm()
-  if 1==1:
+  if form.validate():
       try:
             artist.name = form.name.data
             artist.city = form.city.data
@@ -289,9 +291,12 @@ def edit_artist_submission(artist_id):
             artist.image_link = form.image_link.data
             artist.website = form.website_link
             artist.facebook_link = form.facebook_link.data
+            db.session.add(artist)
             db.session.commit()
+            
       except:
             db.session.rollback()
+            print(sys.exc_info())
       finally:
             db.session.close()
   else:
@@ -312,20 +317,20 @@ def edit_venue(venue_id):
 def edit_venue_submission(venue_id):
   # TODO: take values from the form submitted, and update existing
   # venue record with ID <venue_id> using the new attributes
-  venue = Artist.query.get(venue_id)
-  form = VenueForm()
-  if 1==1 :
+  venue = Venue.query.filter_by(id = venue_id).first()
+  form = VenueForm(obj=venue)
+  if form.validate() :
     try:
-        venue.name=form.name.data,
-        venue.city=form.city.data,
-        venue.state=form.state.data,
-        venue.address=form.address.data,
-        venue.phone=form.phone.data,
-        venue.genres=form.genres.data,
-        venue.facebook_link=form.facebook_link.data,
-        venue.image_link=form.image_link.data,
-        venue.website=form.website_link.data,
-        venue.seeking_talent=form.seeking_talent.data,
+        venue.name=form.name.data
+        venue.city=form.city.data
+        venue.state=form.state.data
+        venue.address=form.address.data
+        venue.phone=form.phone.data
+        venue.genres=form.genres.data
+        venue.facebook_link=form.facebook_link.data
+        venue.image_link=form.image_link.data
+        venue.website=form.website_link.data
+        venue.seeking_talent=form.seeking_talent.data
         venue.seeking_description=form.seeking_description.data
         db.session.add(venue)
         db.session.commit()
@@ -374,7 +379,7 @@ def create_artist_submission():
         except:
           flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
           db.session.rollback()
-          # print(sys.exc_info())
+          print(sys.exc_info())
         finally:
           db.session.close()
   else:
@@ -421,7 +426,7 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   form = ShowForm()
-  if 1==1:
+  if form.validate():
         try:
           show_new = Show(venue_id=form.venue_id.data,
                             artist_id=form.artist_id.data,
