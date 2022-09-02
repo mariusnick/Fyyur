@@ -5,14 +5,12 @@ from flask_migrate import Migrate
 from datetime import datetime
 import logging
 
-app = Flask(__name__)
 
 
-app.config.from_object('config')
 
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 #migrate = Migrate(app, db)
-db.create_all()
+#db.create_all()
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -35,7 +33,7 @@ class Venue(db.Model):
     seeking_description =  db.Column(db.String(300))               
     past_shows_count = db.Column(db.Integer)
     upcoming_shows_count = db.Column(db.Integer)
-    shows = db.relationship('Show', backref=db.backref('venues'), lazy="joined")
+    shows = db.relationship('Show', backref=db.backref('venues'), lazy="joined", cascade="all, delete")
     
     def past_shows(self):
         show_list = []
@@ -85,7 +83,7 @@ class Artist(db.Model):
     seeking_description =  db.Column(db.String(300))               
     past_shows_count = db.Column(db.Integer)
     upcoming_shows_count = db.Column(db.Integer)
-    shows = db.relationship('Show', backref=db.backref('artists'), lazy="joined")
+    shows = db.relationship('Show', backref=db.backref('artists'), lazy="joined", cascade="all, delete")
     
     
     def past_shows(self):
